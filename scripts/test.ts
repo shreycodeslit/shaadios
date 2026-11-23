@@ -45,5 +45,10 @@ const toolReply = JSON.stringify((sent[1] as { contents: unknown[] }).contents.a
 ok(r.provider === 'gemini' && r.steps[0].tool === 'compare_quotes' && /Swaad/.test(r.answer), 'agent calls compare_quotes, then answers');
 ok(toolReply.includes('442500') && toolReply.includes('GST not included'), 'the model receives the computed totals and flags from the tool');
 
+const { tidy } = await import('../api/quote');
+const messy = tidy({ ...SAMPLE_QUOTES[0].data, category: 'Catering' as never, taxes: [], total: 507500, subtotal: 507500, taxIncluded: false, lineItems: [{ item: 'Buffet', qty: 350, unit: 'plate', unitPrice: 1450, amount: 507500 }, { item: 'Service charge @ 5%', qty: null, unit: null, unitPrice: null, amount: null }] });
+ok(messy.category === 'catering' && messy.taxes[0]?.rate === 5 && messy.lineItems.length === 1 && messy.total === null, 'quote tidy-up: category name, service charge moved to taxes, pre-GST total treated as subtotal');
+ok(Math.round(compare([{ ...SAMPLE_QUOTES[0], data: messy }], 300)[0].effectiveTotal!) === 624225, 'tidied model output gives the same like-for-like total as the hand-checked sample');
+
 console.log(fails ? `\n${fails} failed` : '\nAll passed');
 process.exit(fails ? 1 : 0);
