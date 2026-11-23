@@ -305,7 +305,7 @@ function Ask({ plan }: { plan: Plan }) {
         {msgs.map((m, i) => (
           <div key={i} className={`bubble ${m.role}`}>
             {m.steps && m.steps.length > 0 && <p className="steps">{m.steps.map((s, j) => <span key={j}>{TOOL_LABEL[s.tool] || s.tool}{s.args.category ? ` (${categoryName(String(s.args.category))})` : ''}</span>)}</p>}
-            <p className="text">{m.text}</p>
+            <p className="text">{m.text.replace(/\*\*(.+?)\*\*/g, '$1').replace(/^#+\s*/gm, '')}</p>
             {m.provider && <p className="by">Answered by {m.provider === 'gemini' ? 'Gemini' : 'Groq'} on the free tier</p>}
           </div>
         ))}

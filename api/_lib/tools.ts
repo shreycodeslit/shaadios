@@ -53,7 +53,7 @@ export const TOOLS: ToolDef[] = [
     run: (p, a) => {
       const qs = p.quotes.filter((q) => q.data.category === a.category);
       if (!qs.length) return { message: `No ${categoryName(String(a.category))} quotes added yet.` };
-      return { guests_used: p.wedding.guests, quotes: compare(qs, p.wedding.guests).map((c) => ({ vendor: c.quote.data.vendor, comparable_total: c.effectiveTotal && Math.round(c.effectiveTotal), per_guest: c.perGuest && Math.round(c.perGuest), flags: c.flags.map((f) => f.text) })) };
+      return { guests_used: p.wedding.guests, how_to_read: 'total_with_gst_and_charges already includes GST, service charges and minimum-guest guarantees. Do not add GST again. Only items under not_included are extra.', quotes: compare(qs, p.wedding.guests).map((c) => ({ vendor: c.quote.data.vendor, quoted: c.quote.data.total ?? c.quote.data.subtotal ?? (c.quote.data.perPlate != null ? `${c.quote.data.perPlate} per plate` : null), total_with_gst_and_charges: c.effectiveTotal && Math.round(c.effectiveTotal), per_guest: c.perGuest && Math.round(c.perGuest), already_counted: c.flags.filter((f) => !/^Not included/.test(f.text)).map((f) => f.text), not_included: c.quote.data.extrasMentioned })) };
     },
   },
   {

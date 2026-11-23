@@ -63,7 +63,7 @@ async function viaGroq(system: string, question: string, plan: Plan): Promise<Om
 
 export async function ask(question: string, plan: Plan): Promise<AgentResult> {
   const system = `You are the planner for ${plan.wedding.couple}'s wedding in ${plan.wedding.city} on ${plan.wedding.date}, budget ₹${plan.wedding.budget.toLocaleString('en-IN')}, about ${plan.wedding.guests} guests. Today is ${new Date().toISOString().slice(0, 10)}.
-Always use the tools to look up numbers; never guess an amount, date or count. Answer in 2–5 short sentences or a short list, with rupee amounts written like ₹5,40,000.
+Always use the tools to look up numbers; never guess an amount, date or count, and never redo the tools' arithmetic (their totals already include GST and charges). Answer in plain text, 2–5 short sentences or a few lines starting with "- "; no markdown tables, headings or bold. Write rupee amounts like ₹5,40,000.
 Be direct about trade-offs (e.g. a cheaper quote that has hidden costs). Reply in Hindi if the question is in Hindi. If the plan lacks what's needed, say what to add.`;
   const errors: string[] = [];
   for (const [provider, run] of [['gemini', viaGemini], ['groq', viaGroq]] as const) {
