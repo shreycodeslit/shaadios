@@ -184,7 +184,7 @@ function Quotes({ plan, setPlan }: { plan: Plan; setPlan: (f: (p: Plan) => Plan)
       }
       const res = await fetch('/api/quote', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ file: data, mime }) });
       const out = await res.json();
-      if (!res.ok) throw new Error(out.error || 'Couldn’t read that quote.');
+      if (!res.ok || out.error) throw new Error(out.error || 'Couldn’t read that quote.');
       setPlan((p) => ({ ...p, quotes: [...p.quotes, { id: uid(), file: f.name, thumb, data: out.data, source: 'gemini', addedAt: new Date().toISOString() }] }));
       setMsg(`Read “${out.data.vendor}” in ${(out.ms / 1000).toFixed(1)} s.`);
     } catch (e) { setMsg(e instanceof Error ? e.message : 'Couldn’t read that quote.'); }
@@ -293,7 +293,7 @@ function Ask({ plan }: { plan: Plan }) {
     try {
       const res = await fetch('/api/ask', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ question: text, plan: { ...plan, quotes: plan.quotes.map((x) => ({ ...x, thumb: null })) } }) });
       const d = await res.json();
-      setMsgs((m) => [...m, res.ok ? { role: 'planner', text: d.answer, steps: d.steps, provider: d.provider } : { role: 'planner', text: d.error || 'The planner couldn’t answer just now.' }]);
+      setMsgs((m) => [...m, res.ok && !d.error ? { role: 'planner', text: d.answer, steps: d.steps, provider: d.provider } : { role: 'planner', text: d.error || 'The planner couldn’t answer just now.' }]);
     } catch { setMsgs((m) => [...m, { role: 'planner', text: 'No connection. Try again.' }]); }
     finally { setBusy(false); }
   }

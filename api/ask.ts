@@ -1,6 +1,6 @@
 // POST /api/ask { question, plan } → { answer, steps, provider, ms }
 import { z } from 'zod';
-import { json, rateLimited } from './_lib/ai';
+import { json, rateLimited, respondLater } from './_lib/ai';
 import { ask } from './_lib/agent';
 import type { Plan } from '../src/lib/types';
 
@@ -8,7 +8,12 @@ export const config = { runtime: 'edge' };
 
 const Body = z.object({ question: z.string().trim().min(2).max(500), plan: z.object({ wedding: z.object({ couple: z.string(), date: z.string(), city: z.string(), budget: z.number(), guests: z.number(), events: z.array(z.any()) }), tasks: z.array(z.any()).max(200), budget: z.array(z.any()).max(20), quotes: z.array(z.any()).max(40), guests: z.array(z.any()).max(1500) }).passthrough() });
 
-export default async function handler(req: Request): Promise<Response> {
+// Answers start streaming at once, so a slow free-tier model can't hit the Edge 25-second start limit
+export default function handler(req: Request): Response {
+  return respondLater(() => handle(req));
+}
+
+async function handle(req: Request): Promise<Response> {
   if (req.method !== 'POST') return json({ error: 'Use POST.' }, 405);
   if (rateLimited(req, 15, 10 * 60_000)) return json({ error: 'Too many questions just now. Try again in a few minutes.' }, 429);
   const text = await req.text();

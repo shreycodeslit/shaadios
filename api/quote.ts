@@ -1,6 +1,6 @@
 // POST /api/quote { file: base64, mime } → the quote read into line items, taxes and extras
 import { z } from 'zod';
-import { generateJson, json, rateLimited } from './_lib/ai';
+import { generateJson, json, rateLimited, respondLater } from './_lib/ai';
 import { CATEGORIES, type QuoteData } from '../src/lib/types';
 
 export const config = { runtime: 'edge' };
@@ -36,7 +36,12 @@ const Reply = z.object({
   validTill: z.string().max(40).nullable().catch(null),
 });
 
-export default async function handler(req: Request): Promise<Response> {
+// Answers start streaming at once, so a slow free-tier model can't hit the Edge 25-second start limit
+export default function handler(req: Request): Response {
+  return respondLater(() => handle(req));
+}
+
+async function handle(req: Request): Promise<Response> {
   if (req.method !== 'POST') return json({ error: 'Use POST.' }, 405);
   if (rateLimited(req, 15, 10 * 60_000)) return json({ error: 'Too many quotes just now. Try again in a few minutes.' }, 429);
   let file = '', mime = '';

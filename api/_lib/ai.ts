@@ -136,3 +136,22 @@ export function rateLimited(req: Request, max: number, windowMs: number): boolea
   e.count += 1;
   return e.count > max;
 }
+
+/**
+ * For slow AI calls on Edge Functions, which must start answering within 25 seconds: the response starts
+ * at once with a space (valid before JSON) and the JSON follows when ready. Errors arrive as { error } with status 200,
+ * so clients check data.error as well as res.ok.
+ */
+export function respondLater(work: () => Promise<Response>): Response {
+  const enc = new TextEncoder();
+  const stream = new ReadableStream({
+    async start(controller) {
+      controller.enqueue(enc.encode(' '));
+      const keepAlive = setInterval(() => controller.enqueue(enc.encode(' ')), 5000);
+      try { controller.enqueue(enc.encode(await (await work()).text())); }
+      catch (e) { controller.enqueue(enc.encode(JSON.stringify({ error: e instanceof Error ? e.message : 'Something went wrong.' }))); }
+      finally { clearInterval(keepAlive); controller.close(); }
+    },
+  });
+  return new Response(stream, { headers: { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' } });
+}
