@@ -2,7 +2,9 @@
 
 **An Indian wedding, run from one place.** Date, city, budget and guest count become a month-by-month plan, a budget split, a vendor-quote comparison and a guest list with RSVPs. AI reads the vendor quotes and answers questions from the couple's own numbers.
 
-Live: _add the Vercel link here_
+Live: **[shaadios-xi.vercel.app](https://shaadios-xi.vercel.app)**
+
+[![Caterer quotes brought to like-for-like totals for the sample wedding](docs/screenshot.jpg)](https://shaadios-xi.vercel.app)
 
 ## What it does
 
